@@ -1,35 +1,27 @@
-const db = require('../util/database');
+const Sequelize = require('sequelize');
 
-module.exports = class Product {
-  constructor(id, title, imageUrl, description, price, userId) {
-    this.id = id;
-    this.title = title;
-    this.imageUrl = imageUrl;
-    this.description = description;
-    this.price = price;
-    this.userId = userId;
-  }
+const sequelize = require('../util/database');
 
-  save() {
-    if (this.id) {
-      return db.execute('UPDATE products SET title=?, price=?, imageUrl=?, description=?, userId=? WHERE id=?',
-        [this.title, this.price, this.imageUrl, this.description, this.userId, this.id]);
-    }
-    return db.execute(
-      'INSERT INTO products (title, price, imageUrl, description, userId) VALUES (?, ?, ?, ?, ?)',
-      [this.title, this.price, this.imageUrl, this.description, this.userId]
-    );
+const Product = sequelize.define('product', {
+  id: {
+    type: Sequelize.INTEGER,
+    autoIncrement: true,
+    allowNull: false,
+    primaryKey: true
+  },
+  title: Sequelize.STRING,
+  price: {
+    type: Sequelize.DOUBLE,
+    allowNull: false
+  },
+  imageUrl: {
+    type: Sequelize.STRING,
+    allowNull: false
+  },
+  description: {
+    type: Sequelize.STRING,
+    allowNull: false
   }
+});
 
-  static deleteById(id) {
-    return db.execute('DELETE FROM products WHERE id = ?', [id]);
-  }
-
-  static fetchAll() {
-    return db.execute('SELECT * FROM products');
-  }
-
-  static findById(id) {
-    return db.execute('SELECT * FROM products WHERE id = ?', [id]);
-  }
-};
+module.exports = Product;
