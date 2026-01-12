@@ -2,9 +2,11 @@ const path = require('path');
 
 const express = require('express');
 const bodyParser = require('body-parser');
+const session = require('express-session');
+const sequelize = require('./util/database');
+var SequelizeDBStore = require("connect-session-sequelize")(session.Store);
 
 const errorController = require('./controllers/error');
-const sequelize = require('./util/database');
 const Product = require('./models/product');
 const User = require('./models/user');
 const Cart = require('./models/cart');
@@ -19,9 +21,25 @@ app.set('views', 'views');
 
 const adminRoutes = require('./routes/admin');
 const shopRoutes = require('./routes/shop');
+const authRoutes = require('./routes/auth');
+
+const store = new SequelizeDBStore({
+  db: sequelize,
+});
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(session({
+  secret: 'my secret',
+  store: store,
+  resave: false,
+  saveUninitialized: false
+}));
+
+app.use((req, res, next) => {
+  res.locals.isAuthenticated = req.session.isLoggedIn;
+  next();
+});
 
 app.use((req, res, next) => {
   User.findByPk(1)
@@ -34,6 +52,7 @@ app.use((req, res, next) => {
 
 app.use('/admin', adminRoutes);
 app.use(shopRoutes);
+app.use(authRoutes);
 
 app.use(errorController.get404);
 
@@ -47,13 +66,10 @@ Order.belongsTo(User);
 User.hasMany(Order);
 Order.belongsToMany(Product, { through: OrderItem });
 
-sequelize
+store
   // .sync({ force: true })
   .sync()
-  .then(result => {
-    return User.findByPk(1);
-    // console.log(result);
-  })
+  .then(() => User.findByPk(1))
   .then(user => {
     if (!user) {
       return User.create({ name: 'Shayan', email: 'test@test.com' });
@@ -61,8 +77,12 @@ sequelize
     return user;
   })
   .then(user => {
-    // console.log(user);
-    return user.createCart();
+    return user.getCart().then(cart => {
+      if (!cart) {
+        return user.createCart();
+      }
+      return cart;
+    });
   })
   .then(cart => {
     app.listen(3000);
@@ -70,3 +90,5 @@ sequelize
   .catch(err => {
     console.log(err);
   });
+
+module.exports = app;

@@ -100,6 +100,7 @@ exports.postCart = (req, res, next) => {
       res.redirect('/cart');
     })
     .catch(err => console.log(err));
+    
 };
 
 exports.postCartDeleteProduct = (req, res, next) => {
