@@ -1,32 +1,38 @@
 <%- include('../includes/head.ejs') %>
     <link rel="stylesheet" href="/css/forms.css">
     <link rel="stylesheet" href="/css/auth.css">
-</head>
+    </head>
 
-<body>
-   <%- include('../includes/navigation.ejs') %>
+    <body>
+        <%- include('../includes/navigation.ejs') %>
 
-    <main>
-        <% if(!isAuthenticated) { %>
-        <form class="login-form" action="/signup" method="POST">
-            <div class="form-control">
-                <label for="email">E-Mail</label>
-                <input type="email" name="email" id="email" required>
-            </div>
-            <div class="form-control">
-                <label for="password">Password</label>
-                <input type="password" name="password" id="password" required>
-            </div>
-            <div class="form-control">
-                <label for="password">Confirm Password</label>
-                <input type="password" name="confirmPassword" id="confirmPassword" required>
-            </div>
-            <button class="btn" type="submit">Signup</button>
-        </form>
-        <!-- <% } else if(isAuthenticated){ %>
+            <main>
+                <% if(errorMessage){ %>
+                    <div>
+                        <%= errorMessage %>
+                    </div>
+                    <% } %>
+                        <% if(!isAuthenticated) { %>
+                            <form class="login-form" action="/signup" method="POST">
+                                <div class="form-control">
+                                    <label for="email">E-Mail</label>
+                                    <input type="email" name="email" id="email" required>
+                                </div>
+                                <div class="form-control">
+                                    <label for="password">Password</label>
+                                    <input type="password" name="password" id="password" required>
+                                </div>
+                                <div class="form-control">
+                                    <label for="password">Confirm Password</label>
+                                    <input type="password" name="confirmedPassword" id="confirmedPassword" required>
+                                </div>
+                                <button class="btn" type="submit">Signup</button>
+                                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                            </form>
+                            <!-- <% } else if(isAuthenticated){ %>
             <form action="/logout" method="post">
                 <button class="btn" type="submit">Logout</button>
             </form>
             <% } %> -->
-    </main>
-<%- include('../includes/end.ejs') %>
+            </main>
+            <%- include('../includes/end.ejs') %>

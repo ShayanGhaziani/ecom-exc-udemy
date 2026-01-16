@@ -1,10 +1,18 @@
 const path = require('path');
+require('dotenv').config();
+
 
 const express = require('express');
 const bodyParser = require('body-parser');
 const session = require('express-session');
+const csrf = require('csurf');
+const flash = require('connect-flash');
 const sequelize = require('./util/database');
 var SequelizeDBStore = require("connect-session-sequelize")(session.Store);
+const store = new SequelizeDBStore({
+  db: sequelize,
+});
+const csrfProtection = csrf();
 
 const errorController = require('./controllers/error');
 const Product = require('./models/product');
@@ -23,9 +31,6 @@ const adminRoutes = require('./routes/admin');
 const shopRoutes = require('./routes/shop');
 const authRoutes = require('./routes/auth');
 
-const store = new SequelizeDBStore({
-  db: sequelize,
-});
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -36,19 +41,52 @@ app.use(session({
   saveUninitialized: false
 }));
 
+app.use(csrfProtection);
+app.use(flash());
+
 app.use((req, res, next) => {
   res.locals.isAuthenticated = req.session.isLoggedIn;
+  res.locals.csrfToken = req.csrfToken();
+  res.locals.userId = req.session.user ? req.session.user.id : '';
   next();
 });
 
 app.use((req, res, next) => {
-  User.findByPk(1)
+  if (!req.session.user) {
+    return next();
+  }
+
+  User.findByPk(req.session.user.id)
     .then(user => {
+      if (!user) {
+        return next();
+      }
       req.user = user;
       next();
     })
     .catch(err => console.log(err));
 });
+
+app.use((req, res, next) => {
+  if (!req.user) {
+    return next();
+  }
+  req.user
+    .getCart()
+    .then(cart => {
+      if (!cart) {
+        return req.user.createCart();
+      }
+      return cart;
+    })
+    .then(cart => {
+      req.cart = cart; // attach cart to request
+      next();
+    })
+    .catch(err => console.log(err));
+});
+
+
 
 app.use('/admin', adminRoutes);
 app.use(shopRoutes);
@@ -66,25 +104,13 @@ Order.belongsTo(User);
 User.hasMany(Order);
 Order.belongsToMany(Product, { through: OrderItem });
 
-store
+sequelize
   // .sync({ force: true })
   .sync()
-  .then(() => User.findByPk(1))
-  .then(user => {
-    if (!user) {
-      return User.create({ name: 'Shayan', email: 'test@test.com' });
-    }
-    return user;
+  .then(() => {
+    return store.sync();
   })
-  .then(user => {
-    return user.getCart().then(cart => {
-      if (!cart) {
-        return user.createCart();
-      }
-      return cart;
-    });
-  })
-  .then(cart => {
+  .then(() => {
     app.listen(3000);
   })
   .catch(err => {
