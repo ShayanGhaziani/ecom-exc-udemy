@@ -1,3 +1,5 @@
+const crypto = require('crypto');
+
 const User = require('../models/user');
 const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
@@ -9,6 +11,14 @@ const transporter = nodemailer.createTransport(sendGridTransport({
   }
 }))
 
+// const transporter = nodemailer.createTransport({
+//     host: 'smtp.ethereal.email',
+//     port: 587,
+//     auth: {
+//         user: 'alvis.jacobson@ethereal.email',
+//         pass: '7pPM29AmhtKSVCGKNw'
+//     }
+// });
 exports.getLogin = (req, res, next) => {
   res.render('auth/login', {
     path: '/login',
@@ -34,7 +44,7 @@ exports.postSignup = (req, res, next) => {
     .then(user => {
       if (user) {
         req.flash('error-signup-pass', 'User with this email already exists!');
-        res.redirect('/signup'); 
+        res.redirect('/signup');
         return Promise.resolve();
       }
       return bcrypt.hash(password, 12);
@@ -54,7 +64,7 @@ exports.postSignup = (req, res, next) => {
         from: 'shayanghaziani@outlook.com',
         subject: 'signup succeeded',
         html: '<h1> you successfully signed up!</h1>'
-      }).catch( err => console.log(err));
+      }).catch(err => console.log(err));
     })
     .catch(err => {
       console.log(err);
@@ -69,13 +79,13 @@ exports.postSignup = (req, res, next) => {
 
 exports.postLogin = (req, res, next) => {
   const { email, password } = req.body;
-  console.log(req.body)
+  console.log('post login controller:', req.body)
   User.findOne({ where: { email } })
     .then(user => {
       if (!user) {
         // console.log('user doesnt exist!');
         req.flash('error', "user not registered!");
-        res.redirect('/login');
+        return res.redirect('/login');
       }
       bcrypt.compare(password, user.password)
         .then(isMatched => {
@@ -89,7 +99,7 @@ exports.postLogin = (req, res, next) => {
               email: user.email
             };
             return req.session.save(err => {
-              console.log(err);
+              console.log('postLogin save session err handler:', err);
               res.redirect('/');
             });
           }
@@ -99,22 +109,6 @@ exports.postLogin = (req, res, next) => {
           console.log(err)
           res.redirect('/login')
         });
-      // else if (user.password === req.body.password) {
-      //   // console.log('entered pass:', req.body.password, 'db pass:', user.password)
-      //   req.session.isLoggedIn = true;
-      //   req.session.user = {
-      //     id: user.id,
-      //     email: user.email
-      //   };
-      //   req.session.save(err => {
-      //     console.log(err);
-      //     res.redirect('/');
-      //   });
-      // }
-      // else {
-      //   console.log('wrong password!')
-      //   res.redirect('/login');
-      // }
     })
     .then(result => {
       if (!result) return;
@@ -123,11 +117,75 @@ exports.postLogin = (req, res, next) => {
     .catch(err => console.log(err));
 };
 exports.postLogout = (req, res, next) => {
+  console.log(req.body);
   req.session.destroy((err) => {
     console.log('user logged out');
     res.redirect('/login');
   });
 };
 
+exports.getReset = (req, res, next) => {
+  res.render('auth/reset-pass', {
+    path: '/reset-pass',
+    pageTitle: 'reset pass',
+    errorMessage: req.flash('reset-pass-no-email')
+  });
+}
 
+exports.postReset = (req, res, next) => {
+  const userMail = req.body.email;
+  crypto.randomBytes(32, (err, buffer) => {
+    if (err) {
+      console.log(err);
+      return res.redirect('/reset-pass');
+    }
+    const token = buffer.toString('hex');
+    User.findOne({ where: { email: userMail } })
+      .then(user => {
+        if (!user) {
+          req.flash('reset-pass-no-email', "user with this email not found! try again:");
+          res.redirect('/reset-pass');
+          return null;
+          // return Promise.resolve();
+        }
+        user.resetToken = token;
+        user.resetTokenExpiration = Date.now() + 3600000;
+        return user.save();
+      })
+      .then(result => {
+        if(!result) {return;}
+        res.redirect('/login');
+        return transporter.sendMail({
+          to: userMail,
+          from: 'shayanghaziani@outlook.com',
+          subject: 'reset pass',
+          html: `
+          <p>youve requested a pass reset</p>
+          <p>click <a href="http://localhost:3000/reset-pass/${token}">here</a> to reset password</p>
+          `
+        })
+      })
+      .catch(err => { console.log(err) })
+  })
+}
 
+exports.getNewPass = (req, res, next) => {
+  const token = req.params.token;
+  console.log(token)
+  User.findOne({resetToken: token, resetTokenExpiration: {$gt: Date.now()}})
+  .then(user => {
+    res.render('auth/new-pass', {
+    path: '/new-pass',
+    pageTitle: 'new pass',
+    errorMessage: req.flash('new-pass'),
+    userId: user.id.toString()
+  });
+  })
+  .catch(err => {console.log(err)});
+  
+}
+
+exports.postNewPass = (req, res, next) => {
+  
+  res.redirect('/login');
+}
