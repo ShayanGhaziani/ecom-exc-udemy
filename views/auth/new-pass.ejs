@@ -28,6 +28,7 @@
                                 </div>
                                 <button class="btn" type="submit">Update Password</button>
                                 <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                <input type="hidden" name="passwordToken" value="<%= passwordToken %>">
                                 <input type="hidden" name="userId" value="<%= userId %>">
                             </form>
                             <!-- <% } else if(isAuthenticated){ %>

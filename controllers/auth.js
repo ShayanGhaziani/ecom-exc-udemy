@@ -20,30 +20,38 @@ const transporter = nodemailer.createTransport(sendGridTransport({
 //     }
 // });
 exports.getLogin = (req, res, next) => {
+  let message = req.flash('error');
+  message = message.length > 0 ? message[0] : null;
   res.render('auth/login', {
     path: '/login',
     pageTitle: 'Login',
-    errorMessage: req.flash('error')
+    errorMessage: message,
+    // errorMessage1: req.flash('email-pass-wrong')
   });
 };
 exports.getSignup = (req, res, next) => {
+  let message = req.flash('error');
+  message = message.length > 0 ? message[0] : null;
   res.render('auth/signup', {
     path: '/signup',
     pageTitle: 'signup',
-    errorMessage: req.flash('error-signup-pass')
+    // errorMessage: req.flash('error-signup-pass')
+    errorMessage: message
   });
 };
+
+
 exports.postSignup = (req, res, next) => {
   const { email, password, confirmedPassword } = req.body;
 
   if (password !== confirmedPassword) {
+    req.flash('error', 'passwords dont match!')
     return res.redirect('/signup');
   }
-
   User.findOne({ where: { email } })
     .then(user => {
       if (user) {
-        req.flash('error-signup-pass', 'User with this email already exists!');
+        req.flash('error', 'User with this email already exists!');
         res.redirect('/signup');
         return Promise.resolve();
       }
@@ -79,7 +87,8 @@ exports.postSignup = (req, res, next) => {
 
 exports.postLogin = (req, res, next) => {
   const { email, password } = req.body;
-  console.log('post login controller:', req.body)
+  // console.log('post login controller:', req.body)
+
   User.findOne({ where: { email } })
     .then(user => {
       if (!user) {
@@ -100,10 +109,12 @@ exports.postLogin = (req, res, next) => {
             };
             return req.session.save(err => {
               console.log('postLogin save session err handler:', err);
-              res.redirect('/');
+              return res.redirect('/login');
             });
           }
-          res.redirect('/login');
+          // req.flash('email-pass-wrong', "Email or Password WRONG!");
+          req.flash('error', "Email or Password WRONG!");
+          return res.redirect('/login');
         })
         .catch(err => {
           console.log(err)
@@ -116,6 +127,8 @@ exports.postLogin = (req, res, next) => {
     })
     .catch(err => console.log(err));
 };
+
+
 exports.postLogout = (req, res, next) => {
   console.log(req.body);
   req.session.destroy((err) => {
@@ -125,10 +138,15 @@ exports.postLogout = (req, res, next) => {
 };
 
 exports.getReset = (req, res, next) => {
+  let message = req.flash('error');
+  if (message.length > 0) { message = message[0]; }
+  else { message = null; }
+
   res.render('auth/reset-pass', {
     path: '/reset-pass',
     pageTitle: 'reset pass',
-    errorMessage: req.flash('reset-pass-no-email')
+    // errorMessage: req.flash('reset-pass-no-email')
+    errorMessage: message
   });
 }
 
@@ -143,7 +161,7 @@ exports.postReset = (req, res, next) => {
     User.findOne({ where: { email: userMail } })
       .then(user => {
         if (!user) {
-          req.flash('reset-pass-no-email', "user with this email not found! try again:");
+          req.flash('error', "user with this email not found! try again:");
           res.redirect('/reset-pass');
           return null;
           // return Promise.resolve();
@@ -153,7 +171,7 @@ exports.postReset = (req, res, next) => {
         return user.save();
       })
       .then(result => {
-        if(!result) {return;}
+        if (!result) { return; }
         res.redirect('/login');
         return transporter.sendMail({
           to: userMail,
@@ -170,22 +188,29 @@ exports.postReset = (req, res, next) => {
 }
 
 exports.getNewPass = (req, res, next) => {
+  let message = req.flash('error');
+  message = message.length > 0 ? message[0] : null;
+
   const token = req.params.token;
-  console.log(token)
-  User.findOne({resetToken: token, resetTokenExpiration: {$gt: Date.now()}})
-  .then(user => {
-    res.render('auth/new-pass', {
-    path: '/new-pass',
-    pageTitle: 'new pass',
-    errorMessage: req.flash('new-pass'),
-    userId: user.id.toString()
-  });
+  console.log('getNewPass controller token:', token)
+  User.findOne({
+    resetToken: token,
+    resetTokenExpiration: { $gt: Date.now() } //JS greater than operator
   })
-  .catch(err => {console.log(err)});
-  
+    .then(user => {
+      res.render('auth/new-pass', {
+        path: '/new-pass',
+        pageTitle: 'new pass',
+        errorMessage: message,
+        userId: user.id.toString(),
+        passwordToken: token
+      });
+    })
+    .catch(err => { console.log(err) });
+
 }
 
 exports.postNewPass = (req, res, next) => {
-  
+  console.log(req.body);
   res.redirect('/login');
 }
