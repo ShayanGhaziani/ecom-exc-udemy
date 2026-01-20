@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const { Op } = require('sequelize');
 
 const User = require('../models/user');
 const bcrypt = require('bcryptjs');
@@ -109,7 +110,7 @@ exports.postLogin = (req, res, next) => {
             };
             return req.session.save(err => {
               console.log('postLogin save session err handler:', err);
-              return res.redirect('/login');
+              return res.redirect('/');
             });
           }
           // req.flash('email-pass-wrong', "Email or Password WRONG!");
@@ -194,10 +195,16 @@ exports.getNewPass = (req, res, next) => {
   const token = req.params.token;
   console.log('getNewPass controller token:', token)
   User.findOne({
-    resetToken: token,
-    resetTokenExpiration: { $gt: Date.now() } //JS greater than operator
+    where: {
+      resetToken: token,
+      // resetTokenExpiration: { [Op.gt]: Date.now() } //JS greater than operator
+    }
   })
     .then(user => {
+      if (!user) {
+        req.flash('error', 'Token expired or invalid. Please request a new password reset.');
+        return res.redirect('/reset-pass');
+      }
       res.render('auth/new-pass', {
         path: '/new-pass',
         pageTitle: 'new pass',
@@ -206,11 +213,56 @@ exports.getNewPass = (req, res, next) => {
         passwordToken: token
       });
     })
-    .catch(err => { console.log(err) });
+    .catch(err => { console.log(err) })
+};
 
-}
 
 exports.postNewPass = (req, res, next) => {
-  console.log(req.body);
-  res.redirect('/login');
-}
+  const { password, confirmedPassword, passwordToken, userId, email } = req.body;
+  let resetUserPass;
+  console.log('email in postNewPass:', email);
+
+  if (password !== confirmedPassword) {
+    req.flash('error', 'Passwords do not match!');
+    return res.redirect(req.get('referrer') || '/login');
+  }
+
+  User.findOne({
+    where: {
+      resetToken: passwordToken,
+      // resetTokenExpiration: { [Op.gt]: Date.now() },
+      id: userId,
+      email: email
+    }
+  })
+
+    .then(user => {
+      // console.log(user);
+      if (!user) {
+        req.flash('error', 'Session expired. Please request a new password reset.');
+        return res.redirect('/reset-pass');
+      }
+      resetUserPass = user;
+      return bcrypt.hash(password, 12);
+    })
+    .then(hashedPassword => {
+      if (!hashedPassword) return;
+
+      resetUserPass.resetToken = null;
+      resetUserPass.resetTokenExpiration = null;
+      resetUserPass.password = hashedPassword;
+      // console.log(resetUserPass);
+
+      console.log('Password successfully updated in memory, saving to DB...');
+      return resetUserPass.save();
+    })
+    .then(result => {
+      if (!result) return;
+      req.flash('success', 'Password reset successful. Please login.');
+      res.redirect('/login');
+    })
+    .catch(err => {
+      console.log('Error in postNewPass:', err);
+      res.redirect('/login');
+    });
+};
