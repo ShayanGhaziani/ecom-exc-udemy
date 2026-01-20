@@ -1,5 +1,6 @@
 const crypto = require('crypto');
-const { Op } = require('sequelize');
+const { validationResult } = require('express-validator');
+// const { op } = require('sequelize');
 
 const User = require('../models/user');
 const bcrypt = require('bcryptjs');
@@ -36,7 +37,9 @@ exports.getSignup = (req, res, next) => {
   res.render('auth/signup', {
     path: '/signup',
     pageTitle: 'signup',
-    // errorMessage: req.flash('error-signup-pass')
+    email: '',
+    password: '',
+    confirmedPassword: '',
     errorMessage: message
   });
 };
@@ -44,10 +47,24 @@ exports.getSignup = (req, res, next) => {
 
 exports.postSignup = (req, res, next) => {
   const { email, password, confirmedPassword } = req.body;
-
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(422).render('auth/signup', {
+      path: '/signup',
+      pageTitle: 'signup',
+      errorMessage: errors.array()[0].msg
+    });
+  }
   if (password !== confirmedPassword) {
     req.flash('error', 'passwords dont match!')
-    return res.redirect('/signup');
+    return res.render('auth/signup', {
+      path: '/signup',
+      pageTitle: 'signup',
+      email: email,
+      password: password,
+      confirmedPassword: confirmedPassword,
+      errorMessage: errors.array().length > 0 ? errors.array()[0].msg : 'passwords dont match!'
+    });
   }
   User.findOne({ where: { email } })
     .then(user => {
