@@ -15,15 +15,19 @@
                         <% if(!isAuthenticated) { %>
                             <form class="login-form" action="/signup" method="POST">
                                 <div class="form-control">
-                                    <label for="email">E-Mail</label>
-                                    <input type="email" name="email" id="email" value="<%= email ? email : '' %>" required>
+                                    <label for="email">E-mail</label>
+                                    <input type="email" name="email" id="email" value="<%= oldInput.email ? oldInput.email : '' %>"
+                                        class="<%= validationErrors.find(err => err.path === 'email') ? 'invalid' : '' %>"
+                                        required>
                                 </div>
 
                                 <div class="form-control">
                                     <label for="password">Password</label>
                                     <div class="password-wrapper">
                                         <input type="password" name="password" id="password"
-                                            value="<%= password ? password : '' %>" required>
+                                            value="<%= oldInput.password ? oldInput.password : '' %>"
+                                            class="<%= validationErrors.find(err => err.path === 'password') ? 'invalid' : '' %>"
+                                            required>
                                         <button type="button" class="toggle-btn">Show</button>
                                     </div>
                                 </div>
@@ -32,7 +36,9 @@
                                     <label for="confirmedPassword">Confirm Password</label>
                                     <div class="password-wrapper">
                                         <input type="password" name="confirmedPassword" id="confirmedPassword"
-                                            value="<%= confirmedPassword ? confirmedPassword : '' %>" required>
+                                            value="<%= oldInput.confirmedPassword ? oldInput.confirmedPassword : '' %>"
+                                            class="<%= validationErrors.find(err => err.path === 'confirmedPassword') ? 'invalid' : '' %>"
+                                            required>
                                         <button type="button" class="toggle-btn">Show</button>
                                     </div>
                                 </div>
