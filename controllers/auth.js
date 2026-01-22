@@ -94,7 +94,9 @@ exports.postSignup = (req, res, next) => {
       });
     })
     .catch(err => {
-      console.log(err);
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
     });
 };
 
@@ -133,7 +135,11 @@ exports.postLogin = (req, res, next) => {
       if (!result) return;
       res.redirect('/login');
     })
-    .catch(err => console.log(err));
+    .catch(err => {
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
+    });
 };
 
 
@@ -187,11 +193,15 @@ exports.postReset = (req, res, next) => {
           subject: 'reset pass',
           html: `
           <p>youve requested a pass reset</p>
-          <p>click <a href="http://localhost:3000/reset-pass/${token}">here</a> to reset password</p>
+          <p>click <a href="http://localhost:3000/reset-pass/${token}?${userMail}">here</a> to reset password</p>
           `
         })
       })
-      .catch(err => { console.log(err) })
+      .catch(err => {
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
+    })
   })
 }
 
@@ -220,7 +230,11 @@ exports.getNewPass = (req, res, next) => {
         passwordToken: token
       });
     })
-    .catch(err => { console.log(err) })
+    .catch(err => {
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
+    });
 };
 
 
