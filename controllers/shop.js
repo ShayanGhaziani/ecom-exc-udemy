@@ -1,4 +1,10 @@
 const Product = require('../models/product');
+const Order = require('../models/order');
+
+const fs = require('fs');
+const path = require('path');
+
+const PDFDocument = require('pdfkit');
 
 exports.getProducts = (req, res, next) => {
   Product.findAll()
@@ -155,6 +161,9 @@ exports.postCartDecProduct = (req, res, next) => {
       if (products.length === 0) {
         return res.redirect('/cart');
       }
+      if (products[0].cartItem.quantity <= 1) {
+        return products[0].cartItem.destroy();
+      }
       return products[0].cartItem.decrement('quantity', { by: 1 });
     })
     .then(() => {
@@ -207,8 +216,7 @@ exports.postOrder = (req, res, next) => {
 
 
 exports.getOrders = (req, res, next) => {
-  req.user
-    .getOrders({include: ['products']})
+  req.user.getOrders({ include: ['products'] })
     .then(orders => {
       res.render('shop/orders', {
         path: '/orders',
@@ -221,4 +229,49 @@ exports.getOrders = (req, res, next) => {
       error.httpStatusCode = 500;
       return next(error);
     });
+};
+
+
+exports.getInvoice = (req, res, next) => {
+  const orderId = req.params.orderId;
+  Order.findByPk(orderId)
+  .then(order => {
+    if (!order) {
+      return next(new Error('Order not found'));
+    }
+    if (order.userId !== req.user.id) {
+      return next(new Error('Unauthorized'));
+    }
+    const invoiceName = 'invoice-' + orderId + '.pdf';
+    const invoicePath = path.join('invoices', invoiceName);
+
+    const pdfDoc = new PDFDocument();
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'inline; filename="' + invoiceName + '"');
+    pdfDoc.pipe(fs.createWriteStream(invoicePath));
+    pdfDoc.pipe(res);
+
+    pdfDoc.fontSize(26).text('Invoice', {
+      underline: true
+    });
+    pdfDoc.text('------------------------');
+    let totalPrice = 0;
+    order.getProducts().then(products => {
+      products.forEach(prod => {
+        totalPrice += prod.orderItem.quantity * prod.price;
+        pdfDoc.fontSize(14).text(
+          prod.title +
+            ' - ' +
+            prod.orderItem.quantity +
+            'x' +
+            prod.price +
+            '$'
+        );
+      });
+      pdfDoc.text('------------------------');
+      pdfDoc.fontSize(20).text('Total Price: $' + totalPrice);
+      pdfDoc.end();
+    });
+  })
+  .catch(err => { return next(err); });
 };

@@ -6,13 +6,13 @@
         <%- include('../includes/navigation.ejs') %>
             <main>
                 <% if (orders.length <=0) { %>
-                    <h1>Nothing there!</h1>
+                    <h1>No orders Yet!</h1>
                     <% } else { %>
                         <h1 class="centered">Your Orders</h1>
                         <ul class="orders__item-list">
                             <% orders.forEach(order=> { %>
                                 <li class="orders__item">
-                                    <h1>Order # <%= order.id %>
+                                    <h1>Order #<%= order.id %> set by userID: <%= order.products[0].userId %> / <a href="/orders/<%= order.id %>">Invoice</a>
                                     </h1>
                                     <table>
                                         <thead>

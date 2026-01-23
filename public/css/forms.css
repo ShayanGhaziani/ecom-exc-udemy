@@ -34,16 +34,30 @@
 .password-wrapper {
   display: flex;
   gap: 0.5rem;
+  align-items: stretch;
+  /* crucial for equal height */
+}
+
+.password-wrapper input {
+  flex: 1;
+  /* Input takes up remaining space */
+  margin-bottom: 0;
+  /* Override default margin inside wrapper */
 }
 
 .toggle-btn {
   cursor: pointer;
-  background: none;
+  background: white;
   border: 1px solid #ccc;
   border-radius: 4px;
-  padding: 0.5rem;
+  padding: 0 1rem;
+  /* Horizontal padding only, let stretch handle height */
   color: #666;
   font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  /* Center text vertically */
+  transition: all 0.2s;
 }
 
 .toggle-btn:hover {
