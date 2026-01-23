@@ -17,21 +17,43 @@
                                     <table>
                                         <thead>
                                             <tr>
-                                                <th>Product Title</th>
+                                                <th>Product ID</th>
+                                                <th>Product Name</th>
                                                 <th>Quantity</th>
+                                                <th>Price</th>
+                                                <th>Total</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <% order.products.forEach(product=> { %>
-                                                <tr>
-                                                    <td>
-                                                        <%= product.title %>
-                                                    </td>
-                                                    <td>
-                                                        <%= product.orderItem.quantity %>
-                                                    </td>
-                                                </tr>
-                                                <% }); %>
+                                            <% let orderTotal=0; %>
+                                                <% order.products.forEach(product=> { %>
+                                                    <% let lineTotal=product.orderItem.quantity * product.price; %>
+                                                        <% orderTotal +=lineTotal; %>
+                                                            <tr>
+                                                                <td>
+                                                                    <%= product.id %>
+                                                                </td>
+                                                                <td>
+                                                                    <%= product.title %>
+                                                                </td>
+                                                                <td>
+                                                                    <%= product.orderItem.quantity %>
+                                                                </td>
+                                                                <td>
+                                                                    <%= product.price %> $
+                                                                </td>
+                                                                <td>
+                                                                    <%= lineTotal %> $
+                                                                </td>
+                                                            </tr>
+                                                            <% }); %>
+                                                                <tr>
+                                                                    <td colspan="4" class="total-label">Total Price:
+                                                                    </td>
+                                                                    <td class="total-amount">
+                                                                        <%= orderTotal %> $
+                                                                    </td>
+                                                                </tr>
                                         </tbody>
                                     </table>
                                 </li>
