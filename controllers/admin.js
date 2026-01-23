@@ -52,7 +52,7 @@ exports.postAddProduct = (req, res, next) => {
     });
   }
 
-  const imageUrl = image.path;
+  const imageUrl = '/' + image.path;
 
   req.user
     .createProduct({
@@ -154,8 +154,7 @@ exports.postEditProduct = (req, res, next) => {
 };
 
 exports.getProducts = (req, res, next) => {
-  req.user
-    .getProducts()
+  req.user.getProducts()
     .then(products => {
       res.render('admin/products', {
         prods: products,
