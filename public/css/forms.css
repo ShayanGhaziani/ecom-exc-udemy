@@ -7,19 +7,28 @@
 .form-control textarea {
   display: block;
   width: 100%;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.form-control label {
+  font-weight: bold;
+  color: #444;
 }
 
 .form-control input,
 .form-control textarea {
-  border: 1px solid #a1a1a1;
+  border: 1px solid #ccc;
   font: inherit;
-  border-radius: 2px;
+  border-radius: 4px;
+  padding: 0.5rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .form-control input:focus,
 .form-control textarea:focus {
-  outline-color: #00695c;
+  outline: none;
+  border-color: #00695c;
+  background-color: #f7fffe;
 }
 
 .password-wrapper {
@@ -29,12 +38,22 @@
 
 .toggle-btn {
   cursor: pointer;
-}
-.toggle-btn:hover {
-  color: #00695c;
+  background: none;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 0.5rem;
+  color: #666;
+  font-size: 0.9rem;
 }
 
-.form-control input.invalid, .form-control textarea.invalid {
-  border-color: red;
-  background-color: #fbdada;
+.toggle-btn:hover {
+  color: #00695c;
+  border-color: #00695c;
+  background-color: #f0f0f0;
+}
+
+.form-control input.invalid,
+.form-control textarea.invalid {
+  border-color: #d32f2f;
+  background-color: #fff0f0;
 }

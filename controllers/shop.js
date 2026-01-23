@@ -51,13 +51,17 @@ exports.getIndex = (req, res, next) => {
 };
 
 exports.getCart = (req, res, next) => {
-  req.cart
-    .getProducts()
+  req.cart.getProducts()
     .then(products => {
+      let totalSum = 0;
+      products.forEach(p => {
+        totalSum += p.price * p.cartItem.quantity;
+      });
       res.render('shop/cart', {
         path: '/cart',
         pageTitle: 'Your Cart',
-        products: products
+        products: products,
+        totalSum: totalSum
       });
     })
     .catch(err => {
@@ -93,7 +97,7 @@ exports.postCart = (req, res, next) => {
       });
     })
     .then(() => {
-      res.redirect('/cart');
+      res.redirect('/products');
     })
     .catch(err => {
       const error = new Error(err);
@@ -112,6 +116,46 @@ exports.postCartDeleteProduct = (req, res, next) => {
         return res.redirect('/cart');
       }
       return products[0].cartItem.destroy();
+    })
+    .then(() => {
+      res.redirect('/cart');
+    })
+    .catch(err => {
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
+    });
+};
+
+exports.postCartAddProduct = (req, res, next) => {
+  const prodId = req.body.productId;
+  req.cart
+    .getProducts({ where: { id: prodId } })
+    .then(products => {
+      if (products.length === 0) {
+        return res.redirect('/cart');
+      }
+      return products[0].cartItem.increment('quantity', { by: 1 });
+    })
+    .then(() => {
+      res.redirect('/cart');
+    })
+    .catch(err => {
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
+    });
+};
+
+exports.postCartDecProduct = (req, res, next) => {
+  const prodId = req.body.productId;
+  req.cart
+    .getProducts({ where: { id: prodId } })
+    .then(products => {
+      if (products.length === 0) {
+        return res.redirect('/cart');
+      }
+      return products[0].cartItem.decrement('quantity', { by: 1 });
     })
     .then(() => {
       res.redirect('/cart');

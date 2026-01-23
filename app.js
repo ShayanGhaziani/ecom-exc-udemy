@@ -99,8 +99,7 @@ app.use((req, res, next) => {
   if (!req.user) {
     return next();
   }
-  req.user
-    .getCart()
+  req.user.getCart()
     .then(cart => {
       if (!cart) {
         return req.user.createCart();
@@ -128,7 +127,8 @@ app.use((error, req, res, next) => {
   res.status(500).render('500', {
     pageTitle: 'Error!',
     path: '/500',
-    isAuthenticated: req.session.isLoggedIn
+    isAuthenticated: req.session.isLoggedIn,
+    userId: req.session.user ? req.session.user.id : ''
   });
 });
 

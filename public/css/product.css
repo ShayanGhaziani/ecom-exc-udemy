@@ -1,27 +1,44 @@
 .product-form {
-    width: 20rem;
+    width: 25rem;
     max-width: 90%;
     margin: auto;
     display: block;
 }
 
+/* Product item within the grid */
 .product-item {
     width: 20rem;
     max-width: 95%;
-    margin: 1rem;
+    /* Margin handled by .grid gap in main.css, but we keep a small one for safety in fallbacks */
+    margin: 0;
+    display: flex;
+    flex-direction: column;
 }
 
 .product__title {
-    font-size: 1.2rem;
+    font-size: 1.25rem;
     text-align: center;
+    color: #333;
+    font-weight: bold;
 }
 
 .product__price {
     text-align: center;
-    color: #4d4d4d;
+    color: #00695c;
     margin-bottom: 0.5rem;
+    font-size: 1.2rem;
+    font-weight: bold;
 }
 
 .product__description {
     text-align: center;
+    color: #666;
+    margin-bottom: 1rem;
+}
+
+.card__content {
+    flex: 1;
+    /* Pushes actions to bottom if content is short */
+    display: flex;
+    flex-direction: column;
 }
