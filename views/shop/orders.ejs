@@ -1,64 +1,64 @@
-<%- include('../includes/head.ejs') %>
-    <link rel="stylesheet" href="/css/table.css">
-    </head>
+  <%- include('../includes/head.ejs') %>
+  <link rel="stylesheet" href="/css/table.css">
+  </head>
 
-    <body>
-        <%- include('../includes/navigation.ejs') %>
-            <main>
-                <% if (orders.length <=0) { %>
-                    <h1>No orders Yet!</h1>
-                    <% } else { %>
-                        <h1 class="centered">Your Orders</h1>
-                        <ul class="orders__item-list">
-                            <% orders.forEach(order=> { %>
-                                <li class="orders__item">
-                                    <h1>Order #<%= order.id %> set by userID: <%= order.products[0].userId %> / <a href="/orders/<%= order.id %>">Download Invoice</a>
-                                    </h1>
-                                    <table>
-                                        <thead>
-                                            <tr>
-                                                <th>Product ID</th>
-                                                <th>Product Name</th>
-                                                <th>Quantity</th>
-                                                <th>Price</th>
-                                                <th>Total</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <% let orderTotal=0; %>
-                                                <% order.products.forEach(product=> { %>
-                                                    <% let lineTotal=product.orderItem.quantity * product.price; %>
-                                                        <% orderTotal +=lineTotal; %>
-                                                            <tr>
-                                                                <td>
-                                                                    <%= product.id %>
-                                                                </td>
-                                                                <td>
-                                                                    <%= product.title %>
-                                                                </td>
-                                                                <td>
-                                                                    <%= product.orderItem.quantity %>
-                                                                </td>
-                                                                <td>
-                                                                    <%= product.price %> $
-                                                                </td>
-                                                                <td>
-                                                                    <%= lineTotal %> $
-                                                                </td>
-                                                            </tr>
-                                                            <% }); %>
-                                                                <tr>
-                                                                    <td colspan="4" class="total-label">Total Price:
-                                                                    </td>
-                                                                    <td class="total-amount">
-                                                                        <%= orderTotal %> $
-                                                                    </td>
-                                                                </tr>
-                                        </tbody>
-                                    </table>
-                                </li>
-                                <% }); %>
-                        </ul>
-                        <% } %>
-            </main>
-            <%- include('../includes/end.ejs') %>
+  <body>
+    <%- include('../includes/navigation.ejs') %>
+    <main>
+      <% if (orders.length <=0) { %>
+      <h1>No orders Yet!</h1>
+      <% } else { %>
+      <h1 class="centered">Your Orders</h1>
+      <ul class="orders__item-list">
+        <% orders.forEach(order=> { %>
+        <li class="orders__item">
+          <h1>Order #<%= order.id %> set by userID: <%= order.products[0].userId %> / <a href="/orders/<%= order.id %>">Download Invoice</a>
+          </h1>
+          <table>
+            <thead>
+              <tr>
+                <th>Product ID</th>
+                <th>Product Name</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% let orderTotal=0; %>
+              <% order.products.forEach(product=> { %>
+              <% let lineTotal=product.orderItem.quantity * product.price; %>
+              <% orderTotal +=lineTotal; %>
+              <tr>
+                <td>
+                  <%= product.id %>
+                </td>
+                <td>
+                  <%= product.title %>
+                </td>
+                <td>
+                  <%= product.orderItem.quantity %>
+                </td>
+                <td>
+                  <%= product.price %> $
+                </td>
+                <td>
+                  <%= lineTotal %> $
+                </td>
+              </tr>
+              <% }); %>
+              <tr>
+                <td colspan="4" class="total-label">Total Price:
+                </td>
+                <td class="total-amount">
+                  <%= orderTotal %> $
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </li>
+        <% }); %>
+      </ul>
+      <% } %>
+    </main>
+    <%- include('../includes/end.ejs') %>
