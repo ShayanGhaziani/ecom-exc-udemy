@@ -8,7 +8,7 @@ const PDFDocument = require('pdfkit');
 
 exports.getProducts = (req, res, next) => {
   const pageNum = +req.query.page || 0;
-  const ITEMS_PER_PAGE = 2;
+  const ITEMS_PER_PAGE = 6;
   Product.findAndCountAll({ limit: ITEMS_PER_PAGE, offset: pageNum * ITEMS_PER_PAGE })
     .then(products => {
       res.render('shop/products', {
@@ -51,7 +51,7 @@ exports.getProduct = (req, res, next) => {
 
 exports.getIndex = (req, res, next) => {
   const pageNum = +req.query.page || 0;
-  const ITEMS_PER_PAGE = 2;
+  const ITEMS_PER_PAGE = 6;
   Product.findAndCountAll({ limit: ITEMS_PER_PAGE, offset: pageNum * ITEMS_PER_PAGE })
     .then(products => {
       res.render('shop/index', {
@@ -311,7 +311,7 @@ exports.getInvoice = (req, res, next) => {
           pdfDoc
             .fontSize(18)
             .font('Helvetica-Bold')
-            .text(`Total Price: $${totalPrice.toFixed(2)}`, {
+            .text(`Total Price: ${totalPrice.toFixed(2)}$`, {
               align: 'right'
             });
 
