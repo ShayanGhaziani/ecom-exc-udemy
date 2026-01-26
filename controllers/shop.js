@@ -9,7 +9,7 @@ const PDFDocument = require('pdfkit');
 exports.getProducts = (req, res, next) => {
   Product.findAll()
     .then(products => {
-      res.render('shop/product-list', {
+      res.render('shop/products', {
         prods: products,
         pageTitle: 'All Products',
         path: '/products'
@@ -20,7 +20,7 @@ exports.getProducts = (req, res, next) => {
       error.httpStatusCode = 500;
       return next(error);
     });
-};
+}; 
 
 exports.getProduct = (req, res, next) => {
   const prodId = req.params.productId;
@@ -41,10 +41,13 @@ exports.getProduct = (req, res, next) => {
 };
 
 exports.getIndex = (req, res, next) => {
-  Product.findAll()
+  const pageNum = req.query.page || 0;
+  const ITEMS_PER_PAGE = 2;
+  Product.findAndCountAll({limit: ITEMS_PER_PAGE, offset: pageNum * ITEMS_PER_PAGE})
     .then(products => {
       res.render('shop/index', {
         prods: products,
+        pageNum: pageNum,
         pageTitle: 'Shop',
         path: '/'
       });
@@ -251,9 +254,7 @@ exports.getInvoice = (req, res, next) => {
     pdfDoc.pipe(fs.createWriteStream(invoicePath));
     pdfDoc.pipe(res);
 
-    pdfDoc.fontSize(26).text('Invoice', {
-      underline: true
-    });
+    pdfDoc.fontSize(26).text('Invoice', { underline: true });
     pdfDoc.text('------------------------');
     let totalPrice = 0;
     order.getProducts().then(products => {

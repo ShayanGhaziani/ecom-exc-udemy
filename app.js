@@ -5,15 +5,17 @@ require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const session = require('express-session');
-const csrf = require('csurf');
 const flash = require('connect-flash');
 const multer = require('multer');
+const csrf = require('csurf');
+const csrfProtection = csrf();
+
 const sequelize = require('./util/database');
 var SequelizeDBStore = require("connect-session-sequelize")(session.Store);
 const store = new SequelizeDBStore({
   db: sequelize,
 });
-const csrfProtection = csrf();
+
 
 const errorController = require('./controllers/error');
 const Product = require('./models/product');
@@ -125,8 +127,9 @@ app.use(errorController.get404);
 
 app.use((error, req, res, next) => {
   res.status(500).render('500', {
-    pageTitle: 'Error!',
+    pageTitle: 'Error Occured!',
     path: '/500',
+    errorMessage: error.message,
     isAuthenticated: req.session.isLoggedIn,
     userId: req.session.user ? req.session.user.id : ''
   });
