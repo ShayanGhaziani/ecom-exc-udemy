@@ -9,7 +9,7 @@ const PDFDocument = require('pdfkit');
 exports.getProducts = (req, res, next) => {
   const pageNum = +req.query.page || 0;
   const ITEMS_PER_PAGE = 2;
-  Product.findAndCountAll({limit: ITEMS_PER_PAGE, offset: pageNum * ITEMS_PER_PAGE})
+  Product.findAndCountAll({ limit: ITEMS_PER_PAGE, offset: pageNum * ITEMS_PER_PAGE })
     .then(products => {
       res.render('shop/products', {
         prods: products,
@@ -29,7 +29,7 @@ exports.getProducts = (req, res, next) => {
       error.httpStatusCode = 500;
       return next(error);
     });
-}; 
+};
 
 exports.getProduct = (req, res, next) => {
   const prodId = req.params.productId;
@@ -52,7 +52,7 @@ exports.getProduct = (req, res, next) => {
 exports.getIndex = (req, res, next) => {
   const pageNum = +req.query.page || 0;
   const ITEMS_PER_PAGE = 2;
-  Product.findAndCountAll({limit: ITEMS_PER_PAGE, offset: pageNum * ITEMS_PER_PAGE})
+  Product.findAndCountAll({ limit: ITEMS_PER_PAGE, offset: pageNum * ITEMS_PER_PAGE })
     .then(products => {
       res.render('shop/index', {
         prods: products,
@@ -253,41 +253,75 @@ exports.getOrders = (req, res, next) => {
 exports.getInvoice = (req, res, next) => {
   const orderId = req.params.orderId;
   Order.findByPk(orderId)
-  .then(order => {
-    if (!order) {
-      return next(new Error('Order not found'));
-    }
-    if (order.userId !== req.user.id) {
-      return next(new Error('Unauthorized'));
-    }
-    const invoiceName = 'invoice-' + orderId + '.pdf';
-    const invoicePath = path.join('invoices', invoiceName);
+    .then(order => {
+      if (!order) {
+        return next(new Error('Order not found'));
+      }
+      if (order.userId !== req.user.id) {
+        return next(new Error('Unauthorized'));
+      }
+      const invoiceName = 'invoice-' + orderId + '.pdf';
+      const invoicePath = path.join('invoices', invoiceName);
 
-    const pdfDoc = new PDFDocument();
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'inline; filename="' + invoiceName + '"');
-    pdfDoc.pipe(fs.createWriteStream(invoicePath));
-    pdfDoc.pipe(res);
+      const pdfDoc = new PDFDocument();
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', 'inline; filename="' + invoiceName + '"');
+      pdfDoc.pipe(fs.createWriteStream(invoicePath));
+      pdfDoc.pipe(res);
 
-    pdfDoc.fontSize(26).text('Invoice', { underline: true });
-    pdfDoc.text('------------------------');
-    let totalPrice = 0;
-    order.getProducts().then(products => {
-      products.forEach(prod => {
-        totalPrice += prod.orderItem.quantity * prod.price;
-        pdfDoc.fontSize(14).text(
-          prod.title +
-            ' - ' +
-            prod.orderItem.quantity +
-            'x' +
-            prod.price +
-            '$'
-        );
-      });
-      pdfDoc.text('------------------------');
-      pdfDoc.fontSize(20).text('Total Price: $' + totalPrice);
-      pdfDoc.end();
-    });
-  })
-  .catch(err => { return next(err); });
+      pdfDoc
+        .fontSize(26)
+        .font('Helvetica-Bold')
+        .text('Invoice for Order ' + order.id, { underline: true, align: 'center' })
+        .moveDown();
+
+      pdfDoc
+        .fontSize(12)
+        .font('Helvetica')
+        .text('------------------------------------------------------------------------------------', { align: 'center' })
+        .moveDown();
+
+      let totalPrice = 0;
+
+      order
+        .getProducts()
+        .then(products => {
+          products.forEach(prod => {
+            const quantity = prod.orderItem.quantity;
+            const price = prod.price;
+            const lineTotal = quantity * price;
+
+            totalPrice += lineTotal;
+
+            pdfDoc.text(
+              `${prod.title}`,
+              { continued: true }
+            )
+              .text(
+                `${quantity} x ${price.toFixed(2)}  = ${lineTotal.toFixed(2)}$`,
+                { align: 'right' }
+              );
+          });
+
+          pdfDoc
+            .moveDown()
+            .text('------------------------------------------------------------------------------------', { align: 'center' })
+            .moveDown();
+
+          pdfDoc
+            .fontSize(18)
+            .font('Helvetica-Bold')
+            .text(`Total Price: $${totalPrice.toFixed(2)}`, {
+              align: 'right'
+            });
+
+          pdfDoc.end();
+        })
+        .catch(err => {
+          console.error('Failed to generate invoice PDF:', err);
+          pdfDoc.end();
+        });
+
+    })
+    .catch(err => { return next(err); });
 };
