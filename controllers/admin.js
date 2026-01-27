@@ -80,9 +80,7 @@ exports.getEditProduct = (req, res, next) => {
     return res.redirect('/');
   }
   const prodId = req.params.productId;
-  req.user
-    .getProducts({ where: { id: prodId } })
-    // Product.findById(prodId)
+  req.user.getProducts({ where: { id: prodId } })
     .then(products => {
       const product = products[0];
       if (!product) {
@@ -180,7 +178,7 @@ exports.deleteProduct = (req, res, next) => {
     })
     .then(result => {
       console.log('DESTROYED PRODUCT');
-      res.status(200).json({ message: 'Success!' });
+      res.status(200).json({ message: 'Delete Successful!' });
     })
     .catch(err => {
       res.status(500).json({ message: 'Deleting product failed.' });
