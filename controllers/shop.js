@@ -243,20 +243,27 @@ exports.getCheckout = (req, res, next) => {
     .then(prods => {
       products = prods;
       total = 0;
-      products.forEach(p => { total += p.quantity * p.price; });
+      products.forEach(p => { 
+        total += p.cartItem.quantity * p.price;
+      });
 
       return stripe.checkout.sessions.create({
+        mode: 'payment',
         payment_method_types: ['card'],
         line_items: products.map(p => {
           return {
-            name: p.title,
-            description: p.description,
-            amount: p.price * 100,
-            currency: 'usd',
+            price_data: {
+              currency: 'usd',
+              unit_amount: p.price * 100,
+              product_data: {
+                name: p.title,
+                description: p.description,
+              },
+            },
             quantity: p.cartItem.quantity
           };
         }),
-        success_url: req.protocol + '://' + req.get('host') + '/checkout/success', // => http://localhost:3000/checkout/success
+        success_url: req.protocol + '://' + req.get('host') + '/checkout/success',
         cancel_url: req.protocol + '://' + req.get('host') + '/checkout/cancel'
       });
     })
@@ -267,7 +274,7 @@ exports.getCheckout = (req, res, next) => {
         products: products,
         totalSum: total,
         sessionId: session.id,
-        stripePublicKey: process.env.STRIPE_PUBLIC_KEY
+        stripePublicKey: 'pk_test_51Su8gwAi1HDn8gZljnvKnFUrRNkLGcpiLPuN0ED9gbRSltQvxkWkNH9Usi5pyVKhFXhepzUd4Rsm96woPiTx1StH009V47s5aP'
       });
     })
     .catch(err => {
@@ -279,15 +286,13 @@ exports.getCheckout = (req, res, next) => {
 
 exports.getCheckoutSuccess = (req, res, next) => {
   let fetchedCart;
-  req.user
-    .getCart()
+  req.user.getCart()
     .then(cart => {
       fetchedCart = cart;
       return cart.getProducts();
     })
     .then(products => {
-      return req.user
-        .createOrder()
+      return req.user.createOrder()
         .then(order => {
           return order.addProducts(
             products.map(product => {
@@ -299,7 +304,7 @@ exports.getCheckoutSuccess = (req, res, next) => {
         .catch(err => console.log(err));
     })
     .then(result => {
-      return fetchedCart.setProducts(null);
+      return fetchedCart.setProducts([]);
     })
     .then(result => {
       res.redirect('/orders');
