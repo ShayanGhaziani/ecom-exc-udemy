@@ -1,0 +1,46 @@
+  <%- include('../includes/head.ejs') %>
+  <link rel="stylesheet" href="/css/cart.css">
+
+  </head>
+
+  <body>
+    <%- include('../includes/navigation.ejs') %>
+    <main>
+      <ul class="cart__item-list">
+        <% products.forEach(p=> { %>
+        <li class="cart__item">
+          <h1>
+            <%= p.title %>
+          </h1>
+          <h2>Quantity: <%= p.quantity %>
+          </h2>
+        </li>
+        <% }) %>
+      </ul>
+      <div class="centered">
+        <h2>Total: <%= totalSum %>
+        </h2>
+      </div>
+      <div class="centered">
+        <button id="order-btn" class="btn">ORDER</button>
+        <script src="https://js.stripe.com/v3/"></script>
+        <script>
+  var stripe = Stripe( 'pk_test_51QyvU0CjXQyvU0CjXQyvU0CjXQyvU0CjXQyvU0CjXQyvU0CjXQyvU0CjXQyvU0CjXQyvU0CjXQyvU0CjX' );
+  // Use env variable in real app, but for now user prompted to add. Wait, I can't put process.env here easily.
+  // The plan said "Initialize Stripe: Create a Stripe instance with your Public Key."
+  // I'll add a script tag that sets the key from the server if possible, or just use a placeholder and ask user to replace it.
+  // Or better, pass it from the controller.
+  // But I didn't update the controller to pass the key.
+  // I should assume the user will provide the key or I need to update the controller to pass it.
+  // For now, I will use a placeholder 'STRIPE_PUBLIC_KEY' and notify the user to replace it or I'll update the controller to pass it.
+  var stripe = Stripe( '<%= stripePublicKey %>' );
+  var orderBtn = document.getElementById( 'order-btn' );
+  orderBtn.addEventListener( 'click', function() {
+    stripe.redirectToCheckout( {
+      sessionId: '<%= sessionId %>'
+    } );
+  } );
+        </script>
+      </div>
+    </main>
+    <%- include('../includes/end.ejs') %>

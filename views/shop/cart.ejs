@@ -65,10 +65,7 @@
                     </table>
                     <hr>
                     <div class="centered">
-                        <form action="/create-order" method="POST">
-                            <button type="submit" class="btn">Create Order!</button>
-                            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                        </form>
+                        <a class="btn" href="/checkout">Order Now!</a>
                     </div>
 
                     <% } else { %>
